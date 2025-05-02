@@ -11,7 +11,6 @@ jobs:
     uses: ./.github/workflows/tag-rocks.yaml
 
   get-runners:
-    needs: [tag-rocks]
     runs-on: ubuntu-latest
     outputs:
       arch-map: ${{ steps.set-map.outputs.arch-map }}
