@@ -4,26 +4,38 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: "0 0 */14 * *" # Trigger every 2 weeks at midnight UTC
 
 jobs:
 
   tag-rocks:
     uses: ./.github/workflows/tag-rocks.yaml
 
-  build:
+  get-runners:
     needs: [tag-rocks]
+    runs-on: ubuntu-latest
+    outputs:
+      arch-map: ${{ steps.set-map.outputs.arch-map }}
+    steps:
+      - id: set-map
+        run: |
+          if [[ "${{ github.repository_owner }}" == "canonical" ]]; then
+            echo 'arch-map={"amd64":["noble","X64","large"],"arm64":["noble","ARM64","large"]}' >> $GITHUB_OUTPUT
+          else
+            echo 'arch-map={"amd64":["ubuntu-24.04"],"arm64":["ubuntu-24.04-arm"]}' >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: [get-runners, tag-rocks]
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
     uses: canonical/oci-factory/.github/workflows/Build-Rock.yaml@main
     with:
       rock-repo: ${{ github.repository }}
-      rock-repo-commit: main
+      rock-repo-commit: ${{ github.ref }}
       rockfile-directory: ${{ matrix.rock.location }}
       oci-archive-name: ${{ matrix.rock.name }}_${{ matrix.rock.tag }}
-      arch-map: '{"amd64": ["ubuntu-latest"], "arm64": ["ubuntu-24.04-arm"]}'
+      arch-map: ${{ needs.get-runners.outputs.arch-map }}
 
   test:
     needs: [tag-rocks, build]
