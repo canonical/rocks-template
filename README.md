@@ -1,22 +1,11 @@
-# Rockcraft Rocks Template
-
-This is a template repository for developing rocks with Canonical's [Rockcraft](https://documentation.ubuntu.com/rockcraft/en/latest).
+# Rocks template repo
 
 This repository template provides a basic setup to help you get started quickly with developing your own rock(s).
 
 ## Table of Contents
-- [Prerequisites](#prerequisites)
 - [Setup Instructions](#setup-instructions)
 - [Directory Structure](#directory-structure)
 - [Building the Rock](#building-the-rock)
-
-## Prerequisites
-
-Before you begin, ensure you have the required dependencies to build rocks using Rockcraft. For this, you'll need Rockcraft installed on your machine. Follow the official installation guide [here](https://documentation.ubuntu.com/rockcraft/en/latest/how-to/get-started/).
-
-```bash
-sudo snap install rockcraft --classic
-```
 
 ## Setup Instructions
 
@@ -28,36 +17,38 @@ Check GitHub's documentation on [creating a repository from a template](https://
 
 This template comes with a basic setup to get you started. Here's what you need to customize:
 
-- **`rockcraft.yaml`**: This is the main configuration file where you define your rock's properties like name, version, description, dependencies, etc.
-- **`SECURITY.md.template`**: Set the security policy for the rocks inside this repository. Needs to be renamed to `SECURITY.md`
-- **`CODEOWNERS`**: Specify who are the owner(s) of this code.
+- **`rockcraft.yaml`**: This is your rock's [recipe]([url](https://documentation.ubuntu.com/rockcraft/en/stable/reference/rockcraft.yaml/))! Adjust its contents, as well as its parent directories' names according to your rock's name and version.
+- **`SECURITY.md.template`**: Edit the template with your repo's details and set the security policy by renaming this file to `SECURITY.md`.
+- **`CODEOWNERS`**: Optional, but recommended. Read more about [CODEOWNERS]([url](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)).
 
 ## Directory Structure
 
 Here's an overview of the directory structure of the repository:
 
 ```
-rocks/                        # Directory containing all rocks and its versions
+rocks/                        # Directory containing all rocks and their versions
   └─ my-rock/                 # Directory containing all versions of a single rock
-     └─ 0.1                   # Directory containing the rock project file for a version
+     └─ 0.1                   # Directory containing the rock project file for a specific version
         └─ rockcraft.yaml     # Rock project file
 .gitignore
-CODEOWNERS                    # Specify who are the authors. Useful for notifications
+CODEOWNERS                    
 README.md                     # Top level document containing this specification
-SECURITY.md.template          # File explaining how to report a vulnerability
+SECURITY.md.template          # Security policy template
 ```
 
-## Building the Rock
+## Building, testing and uploading the Rock
 
-To build your rock, simply run the following command from the directory containing a `rockcraft.yaml` file
+To build, test and upload the rock to GHCR, simply commit your `rockcraft.yaml`
+file and check the GitHub actions.
 
-```bash
-rockcraft pack
-```
+> [!NOTE]
+> Before committing your `rockcraft.yaml`, it is recommended that you `pack` it
+> with [Rockcraft](https://snapcraft.io/rockcraft) run a smoke test locally.
+> Check the [Rockcraft documentation](https://documentation.ubuntu.com/rockcraft) to learn more.
 
 ## Sync with template
 
-A `makefile` is provided to sync the repository with the latest template changes. To do so, simply run:
+A `Makefile` is provided to sync the repository with the latest template changes. To do so, simply run:
 
 ```bash
 make sync-with-template
