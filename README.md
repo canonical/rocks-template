@@ -17,9 +17,9 @@ Check GitHub's documentation on [creating a repository from a template](https://
 
 This template comes with a basic setup to get you started. Here's what you need to customize:
 
-- **`rockcraft.yaml`**: This is your rock's [recipe]([url](https://documentation.ubuntu.com/rockcraft/en/stable/reference/rockcraft.yaml/))! Adjust its contents, as well as its parent directories' names according to your rock's name and version.
+- **`rockcraft.yaml`**: This is your rock's [recipe](https://documentation.ubuntu.com/rockcraft/en/stable/reference/rockcraft.yaml/)! Adjust its contents, as well as its parent directories' names according to your rock's name and version.
 - **`SECURITY.md.template`**: Edit the template with your repo's details and set the security policy by renaming this file to `SECURITY.md`.
-- **`CODEOWNERS`**: Optional, but recommended. Read more about [CODEOWNERS]([url](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)).
+- **`CODEOWNERS`**: Optional, but recommended. Read more about [CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
 
 ## Directory Structure
 
