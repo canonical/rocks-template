@@ -10,67 +10,25 @@ jobs:
   tag-rocks:
     uses: ./.github/workflows/tag-rocks.yaml
 
-  
-  # infer-runner-type:
-  #   runs-on: ubuntu-latest
-  #   needs: [tag-rocks]
-  #   strategy:
-  #     matrix:
-  #       rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-
-  #     - uses: canonical/oci-factory-internal/actions/infer-runner-type@main
-  #       id: runner-type
-  #       with:
-  #         rockfile-directory: ${{ matrix.rock.location }}
-
-  #     - name: Flag private runner
-  #       if: steps.runner-type.outputs.use-private-runner == 'true'
-  #       run: |
-  #         # This is a workaround to GitHub's limitation to set output during
-  #         # matrix jobs. If this artifact exists, the next jobs will know to use
-  #         # the private runner.
-  #         mkdir runner-type
-  #         echo true > runner-type/private
-
-  #     - uses: actions/upload-artifact@v4
-  #       if: steps.runner-type.outputs.use-private-runner == 'true'
-  #       with:
-  #         name: runner-type
-  #         path: runner-type/private
-  
 
   get-runners:
     runs-on: ubuntu-latest
-    needs: [tag-rocks] #, infer-runner-type]
+    needs: [tag-rocks]
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
     outputs:
       arch-map: ${{ steps.set-map.outputs.arch-map }}
     steps:
-      # - uses: actions/download-artifact@v4
-      #   continue-on-error: true
-      #   id: download-runner-type
-      #   with:
-      #     name: runner-type
-      #     path: runner-type
-
       - id: set-map
         run: |
           if [[ "${{ github.repository_owner }}" == "canonical" ]]; then
-            # if [ -d ${{ steps.download-runner-type.outputs.download-path }} ]; then
-            #   echo "Using private runners"
-            #   echo 'arch-map={"amd64": ["self-hosted", "self-hosted-linux-amd64-jammy-private-endpoint-medium"]}' >> $GITHUB_OUTPUT
-            # else
-              echo 'arch-map={"amd64":["noble","X64","large"],"arm64":["noble","ARM64","large"]}' >> $GITHUB_OUTPUT
-            # fi
+            echo 'arch-map={"amd64":["noble","X64","large"],"arm64":["noble","ARM64","large"]}' >> $GITHUB_OUTPUT
           else
             echo 'arch-map={"amd64":["ubuntu-24.04"],"arm64":["ubuntu-24.04-arm"]}' >> $GITHUB_OUTPUT
           fi
 
+          
   # Why do we need this duplicate job and reusable Build-Rock workflow?
   # - the Build-Rock wf may need an an environment setup that relies on an internal action
   #   - to call an internal action, the repo must also be internal/private
