@@ -3,6 +3,7 @@
 This repository template provides a basic setup to help you get started quickly with developing your own rock(s).
 
 ## Table of Contents
+
 - [Setup Instructions](#setup-instructions)
 - [Directory Structure](#directory-structure)
 - [Building the Rock](#building-the-rock)
@@ -12,6 +13,15 @@ This repository template provides a basic setup to help you get started quickly 
 ### 1. Start a new repository from this template
 
 Check GitHub's documentation on [creating a repository from a template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template)
+
+#### 1.1. Create secrets, if needed
+
+> [!IMPORTANT]
+> If your repository is **internal** or **private**, you need to create the
+> following secrets in your repository:
+>
+> - `REPO_CLONER_TOKEN`: use a fine grained token with `read:content` and
+> `read:metadata` permissions.
 
 ### 2. Customize the Template
 
