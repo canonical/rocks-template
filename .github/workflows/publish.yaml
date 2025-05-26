@@ -51,6 +51,8 @@ jobs:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
 
       - name: Upload Rock to GHCR
