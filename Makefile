@@ -21,7 +21,6 @@ check-setup:
 	@echo "Checking for required dependencies..."
 
 	@command -v lxd >/dev/null 2>&1 && echo "✓ lxd is installed." || (echo "✗ lxd is missing."; exit 1)
-	@command -v docker >/dev/null 2>&1 && echo "✓ docker is installed." || (echo "✗ docker is missing."; exit 1)
 	@command -v rockcraft >/dev/null 2>&1 && echo "✓ rockcraft is installed." || (echo "✗ rockcraft is missing."; exit 1)
 
 	@echo "All required dependencies are installed."
