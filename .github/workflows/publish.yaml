@@ -13,10 +13,6 @@ jobs:
 
   get-runners:
     runs-on: ubuntu-latest
-    needs: [tag-rocks]
-    strategy:
-      matrix:
-        rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
     outputs:
       arch-map: ${{ steps.set-map.outputs.arch-map }}
     steps:
