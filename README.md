@@ -20,7 +20,7 @@ Check GitHub's documentation on [creating a repository from a template](https://
 > If your repository is **internal** or **private**, you need to create the
 > following secrets in your repository:
 >
-> - `REPO_CLONER_TOKEN`: use a fine grained token with `read:content` and
+> - `REPO_CLONER_TOKEN`: use a [fine grained token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) with `read:content` and
 > `read:metadata` permissions.
 
 ### 2. Customize the Template
