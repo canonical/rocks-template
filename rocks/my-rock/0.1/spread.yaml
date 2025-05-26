@@ -8,7 +8,7 @@ backends:
       #- ubuntu-22.04:
 
 suites:
-  spread/:
+  spread/general/:
     summary: General integration tests
 
     prepare: |
