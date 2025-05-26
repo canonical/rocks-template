@@ -28,7 +28,7 @@ Here's an overview of the directory structure of the repository:
 
 ```
 rocks/                        # Directory containing all rocks and their versions
-  └─ my-rock/                 # Directory containing all versions of a single rock
+  └─ my-rock-name/            # Directory containing all versions of a single rock
      └─ 0.1                   # Directory containing the rock project file for a specific version
         └─ rockcraft.yaml     # Rock project file
 .gitignore
