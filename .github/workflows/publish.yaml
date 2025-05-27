@@ -62,18 +62,25 @@ jobs:
       arch-map: ${{ needs.get-runners.outputs.arch-map }}
 
   test:
-    needs: [tag-rocks, build]
+    needs: [tag-rocks, build, build-internal]
+    if: |
+      always() && needs.tag-rocks.result == 'success' &&
+      (needs.build-internal.result == 'success' && needs.build.result == 'skipped') ||
+      (needs.build-internal.result == 'skipped' && needs.build.result == 'success')
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
     uses: canonical/oci-factory/.github/workflows/Test-Rock.yaml@main
     with:
       oci-archive-name: ${{ matrix.rock.name }}_${{ matrix.rock.tag }}
+    secrets:
+      host-github-token: ${{ secrets.GITHUB_TOKEN }}
 
   upload:
     needs: [tag-rocks, test]
     if: |
-      always() && needs.test.result == 'success'
+      always() && needs.test.result == 'success' &&
+      needs.tag-rocks.result == 'success'
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
