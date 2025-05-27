@@ -72,6 +72,8 @@ jobs:
 
   upload:
     needs: [tag-rocks, test]
+    if: |
+      always() && needs.test.result == 'success'
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
@@ -79,7 +81,6 @@ jobs:
     permissions:
       packages: write
     steps:
-
       - name: Upload Rock to GHCR
         uses: canonical/oci-factory/.github/actions/upload-rock@main
         with:
