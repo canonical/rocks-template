@@ -1,6 +1,6 @@
 # Rocks template repo
 
-This repository template provides a basic setup to help you get started quickly with developing your own rock(s).
+This repository template provides a basic setup to help you get started quickly with developing your own rock.
 
 ## Table of Contents
 
@@ -36,10 +36,9 @@ This template comes with a basic setup to get you started. Here's what you need 
 Here's an overview of the directory structure of the repository:
 
 ```
-rocks/                        # Directory containing all rocks and their versions
-  └─ my-rock/                 # Directory containing all versions of a single rock
-     └─ 0.1                   # Directory containing the rock project file for a specific version
-        └─ rockcraft.yaml     # Rock project file
+my-rock/                      # Directory containing all versions of a single rock
+   └─ 0.1                     # Directory containing the rock project file for a specific version
+      └─ rockcraft.yaml       # Rock project file
 .gitignore
 CODEOWNERS                    
 README.md                     # Top level document containing this specification
