@@ -29,8 +29,8 @@ check-setup:
 # Test all rocks by finding directories that contain spread.yaml
 .PHONY: test-all
 test-all:
-	@echo "Testing all rocks under ./rocks..."
-	@find ./rocks -type f -name "spread.yaml" | while read spread_file; do \
+	@echo "Testing all rocks..."
+	@find ./ -type f -name "spread.yaml" | while read spread_file; do \
 		rock_dir=$$(dirname $$spread_file); \
 		echo "Testing $$rock_dir..."; \
 		pushd $$rock_dir > /dev/null; \
