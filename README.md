@@ -1,8 +1,9 @@
 # Rocks template repo
 
-This repository template provides a basic setup to help you get started quickly with developing your own rock(s).
+This repository template provides a basic setup to help you get started quickly with developing your own rock.
 
 ## Table of Contents
+
 - [Setup Instructions](#setup-instructions)
 - [Directory Structure](#directory-structure)
 - [Building the Rock](#building-the-rock)
@@ -12,6 +13,15 @@ This repository template provides a basic setup to help you get started quickly 
 ### 1. Start a new repository from this template
 
 Check GitHub's documentation on [creating a repository from a template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template)
+
+#### 1.1. Create secrets, if needed
+
+> [!IMPORTANT]
+> If your repository is **internal** or **private**, you need to create the
+> following secrets in your repository:
+>
+> - `REPO_CLONER_TOKEN`: use a [fine grained token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) with `read:content` and
+> `read:metadata` permissions.
 
 ### 2. Customize the Template
 
@@ -27,10 +37,14 @@ This template comes with a basic setup to get you started. Here's what you need 
 Here's an overview of the directory structure of the repository:
 
 ```
-rocks/                        # Directory containing all rocks and their versions
-  └─ my-rock-name/            # Directory containing all versions of a single rock
-     └─ 0.1                   # Directory containing the rock project file for a specific version
-        └─ rockcraft.yaml     # Rock project file
+my-rock-name/                 # Directory containing all versions of a single rock
+   └─ 0.1/                    # Directory containing the rock project file for a specific version
+      └─ rockcraft.yaml       # Rock project file
+      └─ spread.yaml          # Spread test configuration
+      └─ spread/              # Spread tests directory
+         └─ .extension        # Functions used internally by spread tests
+         └─ general/test/     # Directory containing tests
+            └─ task.yaml      # Test file
 .gitignore
 CODEOWNERS                    
 README.md                     # Top level document containing this specification

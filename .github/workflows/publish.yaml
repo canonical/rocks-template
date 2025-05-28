@@ -10,6 +10,7 @@ jobs:
   tag-rocks:
     uses: ./.github/workflows/tag-rocks.yaml
 
+
   get-runners:
     runs-on: ubuntu-latest
     outputs:
@@ -23,8 +24,32 @@ jobs:
             echo 'arch-map={"amd64":["ubuntu-24.04"],"arm64":["ubuntu-24.04-arm"]}' >> $GITHUB_OUTPUT
           fi
 
+          
+  # Why do we need this duplicate job and reusable Build-Rock workflow?
+  # - the Build-Rock wf may need an an environment setup that relies on an internal action
+  #   - to call an internal action, the repo must also be internal/private
+  #     - but the OCI Factory is not internal/private, so that internal action cannot be called from there
+  build-internal:
+    needs: [get-runners, tag-rocks]
+    if: github.event.repository.visibility != 'public'
+    strategy:
+      matrix:
+        rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
+    uses: canonical/oci-factory-internal/.github/workflows/Build-Rock.yaml@main
+    with:
+      rock-repo: ${{ github.repository }}
+      rock-repo-commit: ${{ github.ref }}
+      rockfile-directory: ${{ matrix.rock.location }}
+      oci-archive-name: ${{ matrix.rock.name }}_${{ matrix.rock.tag }}
+      arch-map: ${{ needs.get-runners.outputs.arch-map }}
+    secrets:
+      host-github-token: ${{ secrets.GITHUB_TOKEN }}
+      source-github-token: ${{ secrets.REPO_CLONER_TOKEN }}
+  
+
   build:
     needs: [get-runners, tag-rocks]
+    if: github.event.repository.visibility == 'public'
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
@@ -37,16 +62,25 @@ jobs:
       arch-map: ${{ needs.get-runners.outputs.arch-map }}
 
   test:
-    needs: [tag-rocks, build]
+    needs: [tag-rocks, build, build-internal]
+    if: |
+      always() && needs.tag-rocks.result == 'success' &&
+      (needs.build-internal.result == 'success' && needs.build.result == 'skipped') ||
+      (needs.build-internal.result == 'skipped' && needs.build.result == 'success')
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
     uses: canonical/oci-factory/.github/workflows/Test-Rock.yaml@main
     with:
       oci-archive-name: ${{ matrix.rock.name }}_${{ matrix.rock.tag }}
+    secrets:
+      host-github-token: ${{ secrets.GITHUB_TOKEN }}
 
   upload:
     needs: [tag-rocks, test]
+    if: |
+      always() && needs.test.result == 'success' &&
+      needs.tag-rocks.result == 'success'
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
@@ -54,7 +88,6 @@ jobs:
     permissions:
       packages: write
     steps:
-
       - name: Upload Rock to GHCR
         uses: canonical/oci-factory/.github/actions/upload-rock@main
         with:

@@ -10,4 +10,5 @@
 
 # IDE
 .vs_code/
+.vscode/
 .idea/
