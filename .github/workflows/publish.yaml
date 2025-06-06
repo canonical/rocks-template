@@ -60,6 +60,7 @@ jobs:
       rockfile-directory: ${{ matrix.rock.location }}
       oci-archive-name: ${{ matrix.rock.name }}_${{ matrix.rock.tag }}
       arch-map: ${{ needs.get-runners.outputs.arch-map }}
+      rockcraft-test: ${{ matrix.rock.test }}
 
   test:
     needs: [tag-rocks, build, build-internal]
