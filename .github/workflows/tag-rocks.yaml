@@ -41,12 +41,20 @@ jobs:
               tag="${version}-${base}_${channel}"
             fi
 
+            dir=$(dirname "$file")
+            if [[ -f "$dir/spread.yaml" ]]; then
+              test_flag=true
+            else
+              test_flag=false
+            fi
+
             entry=$(jq -n \
               --arg name "$name" \
               --arg version "$version" \
               --arg tag "$tag" \
               --arg location "$location" \
-              '{name: $name, version: $version, tag: $tag, location: $location}')
+              --argjson test "$test_flag" \
+              '{name: $name, version: $version, tag: $tag, location: $location, test: $test}')
 
             output=$(jq ". + [ $entry ]" <<< "$output")
           done < <(find . -type f -name rockcraft.yaml -print0)
@@ -55,4 +63,3 @@ jobs:
           echo 'json_result<<EOF' >> "$GITHUB_OUTPUT"
           cat rocks.json >> "$GITHUB_OUTPUT"
           echo 'EOF' >> "$GITHUB_OUTPUT"
-
