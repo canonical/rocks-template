@@ -21,7 +21,8 @@ Check GitHub's documentation on [creating a repository from a template](https://
 > following secrets in your repository:
 >
 > - `REPO_CLONER_TOKEN`: use a [fine grained token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) with `read:content` and
-> `read:metadata` permissions.
+> `read:metadata` permissions. **Make sure the token's "resource owner" is _canonical_**, and has access to the right repositories (not just public in this case).
+> Also, please note that fine-grained tokens have an expiration date. So if and when experiencing CI problems checking out the repository, make sure the token is still valid.
 
 ### 2. Customize the Template
 
