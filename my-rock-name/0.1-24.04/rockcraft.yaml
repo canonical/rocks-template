@@ -1,7 +1,7 @@
 # TODO - edit this file to customize your container’s behavior and contents.
 
 name: my-rock-name
-# see https://documentation.ubuntu.com/rockcraft/en/1.12.0/explanation/bases/
+# see https://documentation.ubuntu.com/rockcraft/en/1.13.0/explanation/bases/
 # for more information about bases and using 'bare' bases for chiselled rocks
 base: ubuntu@24.04 # the base environment for this rock
 version: '0.1' # just for humans. Semantic versioning is recommended
