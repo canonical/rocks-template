@@ -98,7 +98,7 @@ jobs:
     if: |
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
-      needs.read-config.outputs.ghcr_upload
+      needs.read-config.outputs.ghcr_upload == 'true'
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
