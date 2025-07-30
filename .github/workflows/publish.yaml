@@ -3,6 +3,8 @@ name: Build and Publish Rocks to GHCR
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -59,7 +61,7 @@ jobs:
     secrets:
       host-github-token: ${{ secrets.GITHUB_TOKEN }}
       source-github-token: ${{ secrets.REPO_CLONER_TOKEN }}
-  
+
 
   build:
     needs: [get-runners, tag-rocks]
@@ -70,7 +72,7 @@ jobs:
     uses: canonical/oci-factory/.github/workflows/Build-Rock.yaml@main
     with:
       rock-repo: ${{ github.repository }}
-      rock-repo-commit: ${{ github.ref }}
+      rock-repo-commit: ${{ github.head_ref || github.ref_name }}
       rockfile-directory: ${{ matrix.rock.location }}
       oci-archive-name: ${{ matrix.rock.name }}_${{ matrix.rock.tag }}
       arch-map: ${{ needs.get-runners.outputs.arch-map }}
@@ -94,10 +96,8 @@ jobs:
   upload:
     needs: [tag-rocks, test, read-config]
     if: |
-      always() &&
-      needs.test.result == 'success' &&
-      needs.tag-rocks.result == 'success' &&
-      needs.read-config.outputs.ghcr_upload
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
