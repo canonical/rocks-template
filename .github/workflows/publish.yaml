@@ -23,6 +23,20 @@ jobs:
           else
             echo 'arch-map={"amd64":["ubuntu-24.04"],"arm64":["ubuntu-24.04-arm"]}' >> $GITHUB_OUTPUT
           fi
+  
+  read-config:
+    runs-on: ubuntu-latest
+    outputs:
+      ghcr_upload: ${{ steps.read-config.outputs.ghcr_upload }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Read .github/ci.yaml with yq
+        id: read-config
+        run: |
+          value=$(yq '.ghcr.upload' .github/ci.yaml)
+          echo "ghcr_upload=${value}" >> $GITHUB_OUTPUT
 
           
   # Why do we need this duplicate job and reusable Build-Rock workflow?
@@ -78,10 +92,12 @@ jobs:
       host-github-token: ${{ secrets.GITHUB_TOKEN }}
 
   upload:
-    needs: [tag-rocks, test]
+    needs: [tag-rocks, test, read-config]
     if: |
-      always() && needs.test.result == 'success' &&
-      needs.tag-rocks.result == 'success'
+      always() &&
+      needs.test.result == 'success' &&
+      needs.tag-rocks.result == 'success' &&
+      needs.read-config.outputs.ghcr_upload
     strategy:
       matrix:
         rock: ${{ fromJSON(needs.tag-rocks.outputs.json_result) }}
