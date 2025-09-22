@@ -1,0 +1,37 @@
+name: Read CI Config
+description: Read and validate .github/ci.yaml configuration file
+
+outputs:
+  ghcr-upload:
+    description: "Whether to upload to GHCR"
+    value: ${{ steps.read-ci-config.outputs.ghcr-upload }}
+  ghcr-cve-scan:
+    description: "Whether to perform CVE scan on GHCR images"
+    value: ${{ steps.read-ci-config.outputs.ghcr-cve-scan }}
+  build-matrix:
+    description: "JSON array of build matrix"
+    value: ${{ steps.read-ci-config.outputs.build-matrix }}
+  upload-matrix:
+    description: "JSON array of upload matrix"
+    value: ${{ steps.read-ci-config.outputs.upload-matrix }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.x"
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install -r .github/actions/read-ci-config/requirements.txt
+
+    - name: Read and validate .github/ci.yaml
+      shell: bash
+      id: read-ci-config
+      run: |
+        python3 .github/actions/read-ci-config/src/process_ci_config.py \
+          .github/ci.yaml

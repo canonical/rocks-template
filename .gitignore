@@ -12,3 +12,6 @@
 .vs_code/
 .vscode/
 .idea/
+
+# Python
+__pycache__/
