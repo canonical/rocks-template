@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from src.process_ci_config import CIConfig, ImageEntry
 
 GENERAL_CI_YAML_WITH_REGISTRIES = """
+version: 1
 ghcr:
   upload: true
   cve-scan: false
@@ -166,6 +167,7 @@ images:
         ci_config.ghcr.cve_scan is False  # pylint: disable=no-member
     )  # pylint: disable=no-member
     assert ci_config.model_dump() == {
+        "version": 1,
         "ghcr": {"upload": True, "cve_scan": False},
         "registries": {
             "docker.io": {
@@ -211,6 +213,7 @@ images:
 
 def test_invalid_registry_auth_method_should_fail():
     sample_yaml = """
+version: 1
 ghcr:
   upload: true
   cve-scan: false
@@ -231,6 +234,7 @@ registries:
 
 def test_cve_scan_true_with_upload_false_should_fail():
     sample_yaml = """
+version: 1
 ghcr:
     upload: false
     cve-scan: true
@@ -324,6 +328,7 @@ images:
 
 def test_image_without_registries_should_pass(fake_open):
     sample_yaml = """
+version: 1
 ghcr:
   upload: true
   cve-scan: false
@@ -351,6 +356,7 @@ images:
 
 def test_duplicated_image_directory_should_deduplicate(fake_open):
     sample_yaml = """
+version: 1
 ghcr:
   upload: true
   cve-scan: false
@@ -455,6 +461,7 @@ def fake_glob(monkeypatch):
 
 def test_images_wildcard_should_glob_rockcraft_yaml(fake_glob, fake_open):
     sample_yaml = """
+version: 1
 ghcr:
   upload: true
   cve-scan: false
@@ -592,6 +599,7 @@ def test_yaml_missing_images_should_fail():
 
 def test_yaml_missing_registries_should_fail():
     sample_yaml = """
+version: 1
 ghcr:
   upload: true
   cve-scan: false
@@ -626,6 +634,7 @@ images:
 
 def test_registy_secrets_without_prefix_should_fail():
     sample_yaml = """
+version: 1
 ghcr:
   upload: true
   cve-scan: false

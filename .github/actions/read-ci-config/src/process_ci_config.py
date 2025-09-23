@@ -179,6 +179,7 @@ class ImageEntry(BaseModel):
 
 
 class CIConfig(BaseModel):
+    version: int = Field(..., description="Version of the CI configuration")
     ghcr: GHCRConfig = Field(
         ..., description="Configuration for GitHub Container Registry"
     )
@@ -189,6 +190,12 @@ class CIConfig(BaseModel):
     images: list[ImageEntry] = Field(description="List of images to be processed")
 
     model_config = pydantic.ConfigDict(extra="forbid")
+
+    @pydantic.field_validator("version")
+    def _ensure_version_supported(cls, v):  # pylint: disable=no-self-argument
+        if v != 1:
+            raise ValueError("Only version 1 of the CI configuration is supported.")
+        return v
 
     @pydantic.field_validator("registries", "images", mode="before")
     def _ensure_registries_dict(cls, v):  # pylint: disable=no-self-argument
