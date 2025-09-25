@@ -3,9 +3,6 @@ import glob
 import json
 import os
 import re
-from collections import defaultdict
-from enum import Enum
-from typing import Optional, Type, Union
 
 import pydantic
 import yaml
@@ -87,6 +84,17 @@ class CIConfig(BaseModel):
 
     @staticmethod
     def image_name_and_tag(image_directory: str) -> tuple[str, str]:
+        """ Read the rockcraft.yaml in the given directory to get the image name and tag.
+
+        Args:
+            image_directory (str)
+
+        Raises:
+            ValueError
+
+        Returns:
+            tuple[str, str]: (name, tag)
+        """
         base_version_id_pattern = r"(\d{2}\.\d{2})"
         with open(
             os.path.join(image_directory, "rockcraft.yaml"), "r", encoding="utf-8"
@@ -112,6 +120,11 @@ class CIConfig(BaseModel):
         return name, tag
 
     def build_matrix(self) -> dict:
+        """ Generate the build matrix for GitHub Actions.
+
+        Returns:
+            dict: Build matrix
+        """
         matrix = {"include": []}
         added_image_dirs = set()
         for image in self.images:  # pylint: disable=not-an-iterable
