@@ -15,7 +15,6 @@ jobs:
       ghcr-upload: ${{ steps.read-ci-config.outputs.ghcr-upload }}
       ghcr-cve-scan: ${{ steps.read-ci-config.outputs.ghcr-cve-scan }}
       build-matrix: ${{ steps.read-ci-config.outputs.build-matrix }}
-      upload-matrix: ${{ steps.read-ci-config.outputs.upload-matrix }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5

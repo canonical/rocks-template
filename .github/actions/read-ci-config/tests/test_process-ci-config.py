@@ -8,36 +8,6 @@ version: 1
 ghcr:
   upload: true
   cve-scan: false
-registries:
-  docker.io:
-    uri: docker.io/ubuntu
-    auth:
-      - method: basic
-        config:
-          username: secrets.DOCKER_IO_USERNAME
-          password: secrets.DOCKER_IO_PASSWORD
-  ecr:
-    uri: public.ecr.aws/ubuntu
-    auth:
-      - method: ecr
-        config:
-          region: us-east-1
-          username: secrets.ECR_USERNAME
-          password: secrets.ECR_PASSWORD
-  acr:
-    uri: myregistry.azurecr.io/ubuntu
-    auth:
-      - method: bearer
-        config:
-          token: secrets.ACR_PASSWORD
-  ecr-public:
-    uri: public.ecr.aws/rocksdev
-    auth:
-      - method: ecr-public
-        config:
-          region: us-east-1
-          username: secrets.ECR_PUBLIC_USERNAME
-          password: secrets.ECR_PUBLIC_PASSWORD
 """
 
 ROCKCRAFT_YAML_MOCK_ROCK_1_0 = """
@@ -116,24 +86,6 @@ def test_image_name_and_tag_with_invalid_base_should_fail(fake_open):
         _ = CIConfig.image_name_and_tag("invalid-rock/1.0")
 
 
-def test_image_with_undefined_registry_should_fail():
-    sample_yaml = (
-        GENERAL_CI_YAML_WITH_REGISTRIES
-        + """
-images:
-  - directory: mock-rock/1.0
-    registries:
-      - undefined-registry
-"""
-    )
-    config_data = yaml.safe_load(sample_yaml)
-    with pytest.raises(
-        ValueError,
-        match="Registry 'undefined-registry' in image 'mock-rock/1.0' is not defined in registries.",
-    ):
-        _ = CIConfig(**config_data)
-
-
 def test_image_with_other_wildcard_should_fail():
     sample_yaml = (
         GENERAL_CI_YAML_WITH_REGISTRIES
@@ -156,8 +108,6 @@ def test_pydantic_model_loads_configuration():
         + """
 images:
   - directory: mock-rock/1.0
-    registries:
-      - docker.io
 """
     )
     config_data = yaml.safe_load(sample_yaml)
@@ -169,67 +119,8 @@ images:
     assert ci_config.model_dump() == {
         "version": 1,
         "ghcr": {"upload": True, "cve_scan": False},
-        "registries": {
-            "docker.io": {
-                "uri": "docker.io/ubuntu",
-                "auth": {
-                    "registry-auth-method": "basic",
-                    "registry-auth-username": "DOCKER_IO_USERNAME",
-                    "registry-auth-password": "DOCKER_IO_PASSWORD",
-                },
-            },
-            "ecr": {
-                "uri": "public.ecr.aws/ubuntu",
-                "auth": {
-                    "registry-auth-method": "ecr",
-                    "registry-auth-region": "us-east-1",
-                    "registry-auth-username": "ECR_USERNAME",
-                    "registry-auth-password": "ECR_PASSWORD",
-                },
-            },
-            "acr": {
-                "uri": "myregistry.azurecr.io/ubuntu",
-                "auth": {
-                    "registry-auth-method": "bearer",
-                    "registry-auth-token": "ACR_PASSWORD",
-                },
-            },
-            "ecr-public": {
-                "uri": "public.ecr.aws/rocksdev",
-                "auth": {
-                    "registry-auth-method": "ecr-public",
-                    "registry-auth-region": "us-east-1",
-                    "registry-auth-username": "ECR_PUBLIC_USERNAME",
-                    "registry-auth-password": "ECR_PUBLIC_PASSWORD",
-                },
-            },
-        },
-        "images": [{"directory": "mock-rock/1.0", "registries": ["docker.io"]}],
+        "images": [{"directory": "mock-rock/1.0"}],
     }
-    assert ci_config.images == [
-        ImageEntry(directory="mock-rock/1.0", registries=["docker.io"])
-    ]
-
-
-def test_invalid_registry_auth_method_should_fail():
-    sample_yaml = """
-version: 1
-ghcr:
-  upload: true
-  cve-scan: false
-registries:
-  ecr:
-    uri: public.ecr.aws/rocksdev
-    auth:
-      - method: ecr
-        config:
-          username: ECR_CREDS_USR
-          password: ECR_CREDS_PSW
-"""
-    config_data = yaml.safe_load(sample_yaml)
-    with pytest.raises(ValidationError) as exc_info:
-        _ = CIConfig(**config_data)
-    assert "registries.ecr.auth.config.region" in str(exc_info.value)
 
 
 def test_cve_scan_true_with_upload_false_should_fail():
@@ -238,7 +129,6 @@ version: 1
 ghcr:
     upload: false
     cve-scan: true
-registries:
 images:
 """
     config_data = yaml.safe_load(sample_yaml)
@@ -259,8 +149,6 @@ images:
     assert ci_config.images == []
     build_matrix = ci_config.build_matrix()
     assert build_matrix == {"include": []}
-    upload_matrix = ci_config.upload_matrix()
-    assert upload_matrix == {"include": []}
 
 
 def test_valid_simple_configuration_should_pass(fake_open):
@@ -269,10 +157,6 @@ def test_valid_simple_configuration_should_pass(fake_open):
         + """
 images:
   - directory: mock-rock/1.0
-    registries:
-      - docker.io
-      - ecr
-      - ecr-public
 """
     )
     config_data = yaml.safe_load(sample_yaml)
@@ -289,41 +173,6 @@ images:
         ]
     }
     assert build_matrix == expected_build_matrix
-    upload_matrix = ci_config.upload_matrix()
-    expected_upload_matrix = {
-        "include": [
-            {
-                "name": "mock-rock",
-                "tag": "1.0-24.04_edge",
-                "artifact-name": "mock-rock-1.0",
-                "registry-uri": "docker.io/ubuntu",
-                "registry-auth-method": "basic",
-                "registry-auth-username": "DOCKER_IO_USERNAME",
-                "registry-auth-password": "DOCKER_IO_PASSWORD",
-            },
-            {
-                "name": "mock-rock",
-                "tag": "1.0-24.04_edge",
-                "artifact-name": "mock-rock-1.0",
-                "registry-uri": "public.ecr.aws/ubuntu",
-                "registry-auth-method": "ecr",
-                "registry-auth-region": "us-east-1",
-                "registry-auth-username": "ECR_USERNAME",
-                "registry-auth-password": "ECR_PASSWORD",
-            },
-            {
-                "name": "mock-rock",
-                "tag": "1.0-24.04_edge",
-                "artifact-name": "mock-rock-1.0",
-                "registry-uri": "public.ecr.aws/rocksdev",
-                "registry-auth-method": "ecr-public",
-                "registry-auth-region": "us-east-1",
-                "registry-auth-username": "ECR_PUBLIC_USERNAME",
-                "registry-auth-password": "ECR_PUBLIC_PASSWORD",
-            },
-        ]
-    }
-    assert upload_matrix == expected_upload_matrix
 
 
 def test_image_without_registries_should_pass(fake_open):
@@ -332,7 +181,6 @@ version: 1
 ghcr:
   upload: true
   cve-scan: false
-registries:
 images:
   - directory: mock-rock/1.0
 """
@@ -350,8 +198,6 @@ images:
         ]
     }
     assert build_matrix == expected_build_matrix
-    upload_matrix = ci_config.upload_matrix()
-    assert upload_matrix == {"include": []}
 
 
 def test_duplicated_image_directory_should_deduplicate(fake_open):
@@ -360,7 +206,6 @@ version: 1
 ghcr:
   upload: true
   cve-scan: false
-registries:
 images:
   - directory: mock-rock/1.0
   - directory: mock-rock/1.0
@@ -379,76 +224,6 @@ images:
         ]
     }
     assert build_matrix == expected_build_matrix
-    upload_matrix = ci_config.upload_matrix()
-    assert upload_matrix == {"include": []}
-
-
-def test_image_with_duplicated_registries_should_deduplicate(fake_open):
-    sample_yaml = (
-        GENERAL_CI_YAML_WITH_REGISTRIES
-        + """
-images:
-  - directory: mock-rock/1.0
-    registries:
-      - docker.io
-      - ecr
-      - docker.io
-  - directory: mock-rock/1.0
-    registries:
-      - ecr
-      - ecr
-  - directory: mock-rock/1.0
-    registries:
-      - acr
-"""
-    )
-    config_data = yaml.safe_load(sample_yaml)
-    ci_config = CIConfig(**config_data)
-    build_matrix = ci_config.build_matrix()
-    expected_build_matrix = {
-        "include": [
-            {
-                "name": "mock-rock",
-                "tag": "1.0-24.04_edge",
-                "directory": "mock-rock/1.0",
-                "artifact-name": "mock-rock-1.0",
-            }
-        ]
-    }
-    assert build_matrix == expected_build_matrix
-    upload_matrix = ci_config.upload_matrix()
-    expected_upload_matrix = {
-        "include": [
-            {
-                "name": "mock-rock",
-                "tag": "1.0-24.04_edge",
-                "artifact-name": "mock-rock-1.0",
-                "registry-uri": "myregistry.azurecr.io/ubuntu",
-                "registry-auth-method": "bearer",
-                "registry-auth-token": "ACR_PASSWORD",
-            },
-            {
-                "name": "mock-rock",
-                "tag": "1.0-24.04_edge",
-                "artifact-name": "mock-rock-1.0",
-                "registry-uri": "docker.io/ubuntu",
-                "registry-auth-method": "basic",
-                "registry-auth-username": "DOCKER_IO_USERNAME",
-                "registry-auth-password": "DOCKER_IO_PASSWORD",
-            },
-            {
-                "name": "mock-rock",
-                "tag": "1.0-24.04_edge",
-                "artifact-name": "mock-rock-1.0",
-                "registry-uri": "public.ecr.aws/ubuntu",
-                "registry-auth-method": "ecr",
-                "registry-auth-region": "us-east-1",
-                "registry-auth-username": "ECR_USERNAME",
-                "registry-auth-password": "ECR_PASSWORD",
-            },
-        ]
-    }
-    assert upload_matrix == expected_upload_matrix
 
 
 @pytest.fixture
@@ -465,15 +240,14 @@ version: 1
 ghcr:
   upload: true
   cve-scan: false
-registries:
 images:
   - directory: "*"
 """
     config_data = yaml.safe_load(sample_yaml)
     ci_config = CIConfig(**config_data)
     assert ci_config.images == [
-        ImageEntry(directory="mock-rock/1.0", registries=[]),
-        ImageEntry(directory="another-rock/2.0", registries=[]),
+        ImageEntry(directory="mock-rock/1.0"),
+        ImageEntry(directory="another-rock/2.0"),
     ]
     build_matrix = ci_config.build_matrix()
     expected_matrix = {
@@ -493,8 +267,6 @@ images:
         ]
     }
     assert build_matrix == expected_matrix
-    upload_matrix = ci_config.upload_matrix()
-    assert upload_matrix == {"include": []}
 
 
 def test_multiple_images_wildcard_should_glob_rockcraft_yaml(fake_glob, fake_open):
@@ -502,18 +274,9 @@ def test_multiple_images_wildcard_should_glob_rockcraft_yaml(fake_glob, fake_ope
         GENERAL_CI_YAML_WITH_REGISTRIES
         + """
 images:
-  - directory: "*"
-    registries:
-      - docker.io
   - directory: "mock-rock/1.0"
-    registries:
-      - ecr
   - directory: "another-rock/2.0"
-    registries:
-      - acr
   - directory: "*"
-    registries:
-      - ecr
 """
     )
     config_data = yaml.safe_load(sample_yaml)
@@ -536,78 +299,10 @@ images:
         ]
     }
     assert build_matrix == expected_build_matrix
-    upload_matrix = ci_config.upload_matrix()
-    expected_upload_matrix = {
-        "include": [
-            {
-                "name": "mock-rock",
-                "tag": "1.0-24.04_edge",
-                "artifact-name": "mock-rock-1.0",
-                "registry-uri": "docker.io/ubuntu",
-                "registry-auth-method": "basic",
-                "registry-auth-username": "DOCKER_IO_USERNAME",
-                "registry-auth-password": "DOCKER_IO_PASSWORD",
-            },
-            {
-                "name": "mock-rock",
-                "tag": "1.0-24.04_edge",
-                "artifact-name": "mock-rock-1.0",
-                "registry-uri": "public.ecr.aws/ubuntu",
-                "registry-auth-method": "ecr",
-                "registry-auth-region": "us-east-1",
-                "registry-auth-username": "ECR_USERNAME",
-                "registry-auth-password": "ECR_PASSWORD",
-            },
-            {
-                "name": "another-rock",
-                "tag": "2.0-24.04_edge",
-                "artifact-name": "another-rock-2.0",
-                "registry-uri": "myregistry.azurecr.io/ubuntu",
-                "registry-auth-method": "bearer",
-                "registry-auth-token": "ACR_PASSWORD",
-            },
-            {
-                "name": "another-rock",
-                "tag": "2.0-24.04_edge",
-                "artifact-name": "another-rock-2.0",
-                "registry-uri": "docker.io/ubuntu",
-                "registry-auth-method": "basic",
-                "registry-auth-username": "DOCKER_IO_USERNAME",
-                "registry-auth-password": "DOCKER_IO_PASSWORD",
-            },
-            {
-                "name": "another-rock",
-                "tag": "2.0-24.04_edge",
-                "artifact-name": "another-rock-2.0",
-                "registry-uri": "public.ecr.aws/ubuntu",
-                "registry-auth-method": "ecr",
-                "registry-auth-region": "us-east-1",
-                "registry-auth-username": "ECR_USERNAME",
-                "registry-auth-password": "ECR_PASSWORD",
-            },
-        ]
-    }
-    assert upload_matrix == expected_upload_matrix
 
 
 def test_yaml_missing_images_should_fail():
     sample_yaml = GENERAL_CI_YAML_WITH_REGISTRIES
-    config_data = yaml.safe_load(sample_yaml)
-    with pytest.raises(ValidationError):
-        _ = CIConfig(**config_data)
-
-
-def test_yaml_missing_registries_should_fail():
-    sample_yaml = """
-version: 1
-ghcr:
-  upload: true
-  cve-scan: false
-images:
-  - directory: mock-rock/1.0
-    registries:
-      - docker.io
-"""
     config_data = yaml.safe_load(sample_yaml)
     with pytest.raises(ValidationError):
         _ = CIConfig(**config_data)
@@ -630,26 +325,3 @@ images:
     config_data = yaml.safe_load(sample_yaml)
     with pytest.raises(ValidationError):
         _ = CIConfig(**config_data)
-
-
-def test_registy_secrets_without_prefix_should_fail():
-    sample_yaml = """
-version: 1
-ghcr:
-  upload: true
-  cve-scan: false
-registries:
-  docker.io:
-    uri: docker.io/ubuntu
-    auth:
-      - method: basic
-        config:
-          username: DOCKER_IO_USERNAME
-          password: DOCKER_IO_PASSWORD
-images:
-  - directory: '*'
-"""
-    config_data = yaml.safe_load(sample_yaml)
-    with pytest.raises(ValidationError) as exc_info:
-        _ = CIConfig(**config_data)
-    assert "Credential name must start with 'secrets.'" in str(exc_info.value)
