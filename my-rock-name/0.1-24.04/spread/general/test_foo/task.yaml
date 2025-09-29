@@ -1,0 +1,2 @@
+summary: test 'foo'
+execute: bash test_foo.sh
