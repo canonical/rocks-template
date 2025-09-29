@@ -45,10 +45,10 @@ my-rock-name/                    # Directory containing all versions of a single
       └─ spread/                 # Spread tests directory
          ├─ .extension           # Functions used internally by spread tests
          └─ general/
-         │  ├─  foo/             # Each test lives in its separate folder 
+         │  ├─  test_foo/        # Each test lives in its separate folder 
          │  │   ├─ task.yaml     # Test file telling the spread what to do
          │  │   └─ test_foo.sh   # The body of your test
-         │  └─  bar/
+         │  └─  test_bar/
          │      └─ ...
          └─ lib/                 # Place to keep scripts common to all the tests
 
