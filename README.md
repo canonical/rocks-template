@@ -38,18 +38,24 @@ This template comes with a basic setup to get you started. Here's what you need 
 Here's an overview of the directory structure of the repository:
 
 ```
-my-rock-name/                 # Directory containing all versions of a single rock
-   └─ 0.1/                    # Directory containing the rock project file for a specific version
-      └─ rockcraft.yaml       # Rock project file
-      └─ spread.yaml          # Spread test configuration
-      └─ spread/              # Spread tests directory
-         └─ .extension        # Functions used internally by spread tests
-         └─ general/test/     # Directory containing tests
-            └─ task.yaml      # Test file
+my-rock-name/                    # Directory containing all versions of a single rock
+   └─ 0.1/                       # Directory containing the rock project file for a specific version
+      ├─ rockcraft.yaml          # Rock project file
+      ├─ spread.yaml             # Spread test configuration
+      └─ spread/                 # Spread tests directory
+         ├─ .extension           # Functions used internally by spread tests
+         └─ general/
+         │  ├─  foo/             # Each test lives in its separate folder 
+         │  │   ├─ task.yaml     # Test file telling the spread what to do
+         │  │   └─ test_foo.sh   # The body of your test
+         │  └─  bar/
+         │      └─ ...
+         └─ lib/                 # Place to keep scripts common to all the tests
+
 .gitignore
 CODEOWNERS                    
-README.md                     # Top level document containing this specification
-SECURITY.md.template          # Security policy template
+README.md                        # Top level document containing this specification
+SECURITY.md.template             # Security policy template
 ```
 
 ## Building, testing and uploading the Rock
