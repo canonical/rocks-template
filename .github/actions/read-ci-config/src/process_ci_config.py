@@ -69,11 +69,7 @@ class CIConfig(BaseModel):
                 # Expand the wildcard using glob
                 dirs = glob.glob("**/rockcraft.yaml", recursive=True)
                 for d in dirs:
-                    expanded_images.append(
-                        ImageEntry(
-                            directory=os.path.dirname(d)
-                        )
-                    )
+                    expanded_images.append(ImageEntry(directory=os.path.dirname(d)))
             else:
                 expanded_images.append(image)
         return expanded_images
@@ -84,7 +80,7 @@ class CIConfig(BaseModel):
 
     @staticmethod
     def image_name_and_tag(image_directory: str) -> tuple[str, str]:
-        """ Read the rockcraft.yaml in the given directory to get the image name and tag.
+        """Read the rockcraft.yaml in the given directory to get the image name and tag.
 
         Args:
             image_directory (str)
@@ -95,7 +91,8 @@ class CIConfig(BaseModel):
         Returns:
             tuple[str, str]: (name, tag)
         """
-        base_version_id_pattern = r"(\d{2}\.\d{2})"
+        # Pattern to match base version id like '22.04', '20.04', or 'devel'
+        base_version_id_pattern = r"(\d{2}(\.|@)\d{2}|devel)$"
         with open(
             os.path.join(image_directory, "rockcraft.yaml"), "r", encoding="utf-8"
         ) as f:
@@ -109,7 +106,8 @@ class CIConfig(BaseModel):
             match = re.search(base_version_id_pattern, base)
             if not match:
                 raise ValueError(
-                    f"Base '{base}' in '{image_directory}/rockcraft.yaml' does not match the expected pattern."
+                    f"Base '{base}' in '{image_directory}/rockcraft.yaml' does not match the expected pattern.\n"
+                    + f"See https://documentation.ubuntu.com/rockcraft/stable/reference/rockcraft.yaml/#base for supported base values."
                 )
             base = match.group(1)
             if version == "latest":
@@ -120,7 +118,7 @@ class CIConfig(BaseModel):
         return name, tag
 
     def build_matrix(self) -> dict:
-        """ Generate the build matrix for GitHub Actions.
+        """Generate the build matrix for GitHub Actions.
 
         Returns:
             dict: Build matrix

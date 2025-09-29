@@ -11,9 +11,6 @@ outputs:
   build-matrix:
     description: "JSON array of build matrix"
     value: ${{ steps.read-ci-config.outputs.build-matrix }}
-  upload-matrix:
-    description: "JSON array of upload matrix"
-    value: ${{ steps.read-ci-config.outputs.upload-matrix }}
 
 runs:
   using: "composite"

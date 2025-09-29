@@ -37,6 +37,13 @@ version: 1.0
 base: ubuntu:noble
 """
 
+ROCKCRAFT_YAML_DEVEL_BASE = """
+name: devel-rock
+version: 1.0
+base: bare
+build-base: devel
+"""
+
 
 # mock the open function to return the content of ROCKCRAFT_YAML_MOCK_ROCK_1_0 or ROCKCRAFT_YAML_ANOTHER_ROCK_2_0
 @pytest.fixture
@@ -52,6 +59,8 @@ def fake_open(monkeypatch):
             return StringIO(ROCKCRAFT_YAML_VERSION_LATEST)
         elif "invalid-rock/1.0/rockcraft.yaml" in file:
             return StringIO(ROCKCRAFT_YAML_INVALID_BASE)
+        elif "devel-rock/1.0/rockcraft.yaml" in file:
+            return StringIO(ROCKCRAFT_YAML_DEVEL_BASE)
         else:
             raise FileNotFoundError(f"No such file: {file}")
 
@@ -84,6 +93,18 @@ def test_image_name_and_tag_with_invalid_base_should_fail(fake_open):
         match="Base 'ubuntu:noble' in 'invalid-rock/1.0/rockcraft.yaml' does not match the expected pattern.",
     ):
         _ = CIConfig.image_name_and_tag("invalid-rock/1.0")
+
+
+def test_image_name_and_tag_with_devel_base_pass(fake_open):
+    name, tag = CIConfig.image_name_and_tag("devel-rock/1.0")
+    assert name == "devel-rock"
+    assert tag == "1.0-devel_edge"
+
+
+def test_image_base_with_at_symbol_should_pass(fake_open):
+    name, tag = CIConfig.image_name_and_tag("latest-rock/latest")
+    assert name == "latest-rock"
+    assert tag == "latest-24.04_edge"
 
 
 def test_image_with_other_wildcard_should_fail():
