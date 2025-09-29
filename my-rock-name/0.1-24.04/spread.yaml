@@ -11,6 +11,10 @@ suites:
   spread/general/:
     summary: General integration tests
 
+    environment:
+      SHARED_LIBRARIES: $PROJECT_PATH/spread/lib
+      PATH: $PATH:$SHARED_LIBRARIES
+
     prepare: |
       sudo snap install docker
 
