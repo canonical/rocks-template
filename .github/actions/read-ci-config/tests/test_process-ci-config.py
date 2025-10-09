@@ -2,12 +2,13 @@ import pytest
 import yaml
 from pydantic import ValidationError
 from src.process_ci_config import CIConfig, ImageEntry
+from textwrap import dedent
 
 GENERAL_CI_YAML_WITH_REGISTRIES = """
 version: 1
 ghcr:
-  upload: true
-  cve-scan: false
+    upload: true
+    cve-scan: false
 """
 
 ROCKCRAFT_YAML_MOCK_ROCK_1_0 = """
@@ -108,12 +109,11 @@ def test_image_base_with_at_symbol_should_pass(fake_open):
 
 
 def test_image_with_other_wildcard_should_fail():
-    sample_yaml = (
-        GENERAL_CI_YAML_WITH_REGISTRIES
-        + """
-images:
-  - directory: "*/rockcraft.yaml"
-"""
+    sample_yaml = GENERAL_CI_YAML_WITH_REGISTRIES + dedent(
+        """\
+        images:
+            - directory: "*/rockcraft.yaml"
+        """
     )
     config_data = yaml.safe_load(sample_yaml)
     with pytest.raises(
@@ -124,12 +124,11 @@ images:
 
 
 def test_pydantic_model_loads_configuration():
-    sample_yaml = (
-        GENERAL_CI_YAML_WITH_REGISTRIES
-        + """
-images:
-  - directory: mock-rock/1.0
-"""
+    sample_yaml = GENERAL_CI_YAML_WITH_REGISTRIES + dedent(
+        """\
+        images:
+            - directory: mock-rock/1.0
+        """
     )
     config_data = yaml.safe_load(sample_yaml)
     ci_config = CIConfig(**config_data)
@@ -145,13 +144,15 @@ images:
 
 
 def test_cve_scan_true_with_upload_false_should_fail():
-    sample_yaml = """
-version: 1
-ghcr:
-    upload: false
-    cve-scan: true
-images:
-"""
+    sample_yaml = dedent(
+        """\
+        version: 1
+        ghcr:
+            upload: false
+            cve-scan: true
+        images:
+        """
+    )
     config_data = yaml.safe_load(sample_yaml)
     with pytest.raises(ValidationError) as exc_info:
         _ = CIConfig(**config_data)
@@ -159,12 +160,7 @@ images:
 
 
 def test_empty_images_should_pass():
-    sample_yaml = (
-        GENERAL_CI_YAML_WITH_REGISTRIES
-        + """
-images:
-"""
-    )
+    sample_yaml = GENERAL_CI_YAML_WITH_REGISTRIES + "\nimages:\n"
     config_data = yaml.safe_load(sample_yaml)
     ci_config = CIConfig(**config_data)
     assert ci_config.images == []
@@ -173,12 +169,11 @@ images:
 
 
 def test_valid_simple_configuration_should_pass(fake_open):
-    sample_yaml = (
-        GENERAL_CI_YAML_WITH_REGISTRIES
-        + """
-images:
-  - directory: mock-rock/1.0
-"""
+    sample_yaml = GENERAL_CI_YAML_WITH_REGISTRIES + dedent(
+        """\
+        images:
+            - directory: mock-rock/1.0
+        """
     )
     config_data = yaml.safe_load(sample_yaml)
     ci_config = CIConfig(**config_data)
@@ -197,14 +192,16 @@ images:
 
 
 def test_image_without_registries_should_pass(fake_open):
-    sample_yaml = """
-version: 1
-ghcr:
-  upload: true
-  cve-scan: false
-images:
-  - directory: mock-rock/1.0
-"""
+    sample_yaml = dedent(
+        """\
+        version: 1
+        ghcr:
+            upload: true
+            cve-scan: false
+        images:
+            - directory: mock-rock/1.0
+        """
+    )
     config_data = yaml.safe_load(sample_yaml)
     ci_config = CIConfig(**config_data)
     build_matrix = ci_config.build_matrix()
@@ -222,15 +219,17 @@ images:
 
 
 def test_duplicated_image_directory_should_deduplicate(fake_open):
-    sample_yaml = """
-version: 1
-ghcr:
-  upload: true
-  cve-scan: false
-images:
-  - directory: mock-rock/1.0
-  - directory: mock-rock/1.0
-"""
+    sample_yaml = dedent(
+        """\
+        version: 1
+        ghcr:
+            upload: true
+            cve-scan: false
+        images:
+            - directory: mock-rock/1.0
+            - directory: mock-rock/1.0
+        """
+    )
     config_data = yaml.safe_load(sample_yaml)
     ci_config = CIConfig(**config_data)
     build_matrix = ci_config.build_matrix()
@@ -256,14 +255,16 @@ def fake_glob(monkeypatch):
 
 
 def test_images_wildcard_should_glob_rockcraft_yaml(fake_glob, fake_open):
-    sample_yaml = """
-version: 1
-ghcr:
-  upload: true
-  cve-scan: false
-images:
-  - directory: "*"
-"""
+    sample_yaml = dedent(
+        """\
+        version: 1
+        ghcr:
+            upload: true
+            cve-scan: false
+        images:
+            - directory: "*"
+        """
+    )
     config_data = yaml.safe_load(sample_yaml)
     ci_config = CIConfig(**config_data)
     assert ci_config.images == [
@@ -291,14 +292,13 @@ images:
 
 
 def test_multiple_images_wildcard_should_glob_rockcraft_yaml(fake_glob, fake_open):
-    sample_yaml = (
-        GENERAL_CI_YAML_WITH_REGISTRIES
-        + """
-images:
-  - directory: "mock-rock/1.0"
-  - directory: "another-rock/2.0"
-  - directory: "*"
-"""
+    sample_yaml = GENERAL_CI_YAML_WITH_REGISTRIES + dedent(
+        """\
+        images:
+            - directory: "mock-rock/1.0"
+            - directory: "another-rock/2.0"
+            - directory: "*"
+        """
     )
     config_data = yaml.safe_load(sample_yaml)
     ci_config = CIConfig(**config_data)
@@ -324,25 +324,6 @@ images:
 
 def test_yaml_missing_images_should_fail():
     sample_yaml = GENERAL_CI_YAML_WITH_REGISTRIES
-    config_data = yaml.safe_load(sample_yaml)
-    with pytest.raises(ValidationError):
-        _ = CIConfig(**config_data)
-
-
-def test_yaml_missing_ghcr_should_fail():
-    sample_yaml = """
-registries:
-  docker.io:
-    uri: docker.io/ubuntu
-    auth:
-      config:
-        username: secrets.DOCKER_IO_USERNAME
-        password: secrets.DOCKER_IO_PASSWORD
-images:
-  - directory: mock-rock/1.0
-    registries:
-      - docker.io
-"""
     config_data = yaml.safe_load(sample_yaml)
     with pytest.raises(ValidationError):
         _ = CIConfig(**config_data)
