@@ -96,6 +96,7 @@ jobs:
   upload:
     needs: [tag-rocks, test, read-config]
     if: |
+      always() && needs.test.result == 'success' &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
       needs.read-config.outputs.ghcr_upload == 'true'
