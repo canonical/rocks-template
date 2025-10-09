@@ -1,8 +1,9 @@
+from textwrap import dedent
+
 import pytest
 import yaml
 from pydantic import ValidationError
 from src.process_ci_config import CIConfig, ImageEntry
-from textwrap import dedent
 
 GENERAL_CI_YAML_WITH_REGISTRIES = """
 version: 1
