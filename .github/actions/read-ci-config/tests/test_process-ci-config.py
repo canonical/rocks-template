@@ -1,9 +1,8 @@
-from textwrap import dedent
-
 import pytest
 import yaml
 from pydantic import ValidationError
 from src.process_ci_config import CIConfig, ImageEntry
+from textwrap import dedent
 
 GENERAL_CI_YAML_WITH_REGISTRIES = """
 version: 1
@@ -325,6 +324,18 @@ def test_multiple_images_wildcard_should_glob_rockcraft_yaml(fake_glob, fake_ope
 
 def test_yaml_missing_images_should_fail():
     sample_yaml = GENERAL_CI_YAML_WITH_REGISTRIES
+    config_data = yaml.safe_load(sample_yaml)
+    with pytest.raises(ValidationError):
+        _ = CIConfig(**config_data)
+
+
+def test_yaml_missing_ghcr_should_fail():
+    sample_yaml = dedent(
+        """\
+        images:
+            - directory: mock-rock/1.0
+        """
+    )
     config_data = yaml.safe_load(sample_yaml)
     with pytest.raises(ValidationError):
         _ = CIConfig(**config_data)
