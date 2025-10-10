@@ -39,16 +39,3 @@ test-all:
 		rm -rf .craft-spread*; \
 		popd > /dev/null; \
 	done
-
-# Validate if the .github/ci.yaml file is correct
-.PHONY: validate-ci-config
-validate-ci-config:
-	@echo "Validating .github/ci.yaml..."
-	@output=$$(python3 .github/actions/read-ci-config/src/process_ci_config.py .github/ci.yaml 2>&1); \
-		if [ $$? -eq 0 ]; then \
-			echo "✅ Validation success!"; \
-		else \
-			echo "$$output"; \
-			echo "================================"; \
-			echo "❌ Validation failure with the error(s) above."; \
-		fi
