@@ -84,17 +84,54 @@ The behavior of the CI is configured in `.github/ci.yaml`, which defines the fol
 | ghcr | True | Dict[str, bool] | The configuration regarding the GHCR. |
 | ghcr.upload | True | bool | Whether the images should be uploaded to GHCR after successful build and test. |
 | ghcr.cve-scan | True | bool | Whether the continuous vulnerability scanning cron workflow should be run. When set to `true`, `ghcr.upload` should also be `true`. |
+| registries | True | Dict[str, Any] | The configuration regarding the additional registries. |
+| registries.\<name\> | False | Dict[str, Any] | The name of the registry. |
+| registries.\<name\>.uri | True | str | The URL of the registry. |
+| registries.\<name\>.auth | True | conlist[Any, min_items=1, max_items=1] | The authentication configurations to access the registry. Currently only one single configuration is supported. |
+| registries.\<name\>.auth[0].method | True | str | The method of the authentication configuration. Supported methods are `basic`, `bearer`, `ecr` and `ecr-public`. |
+| registries.\<name\>.auth[0].config | True | Dict[str, str] | The configuration of the corresponding authentication method. See [below](#registry-authentication-configuration) for details. |
 | images | True | List[Any] | The list of images to be built, tested and uploaded. |
 | images.*.directory | True | str | The directory to the `rockcraft.yaml` file. A quoted asterisk symbol `'*'` matches all the directories that contains a `rockcraft.yaml` file within this repo. |
+| images.*.registries | False | List[str] | The list of additional registries (defined in `registries`) to which the image should be published. |
+
+
+### Registry authentication configuration
+
+The following table lists the supported authentication methods and their
+corresponding configuration parameters.
+
+The configuration arguments are the string literals of the secret names stored
+in the repository's secrets, prepended with the prefix `secrets.`. E.g., for the
+`bearer` method, if the `token` secret stored in the repository is named
+`MY_BEARER_TOKEN`, then the configuration should be `token:
+secrets.MY_BEARER_TOKEN`.
+
+
+| Method | Configuration Parameters | Description |
+|---|---|---|
+| basic | username: str<br>password: str | Basic authentication using a username and password. |
+| bearer | token: str | Bearer token authentication. |
+| ecr<br>ecr-public | region: str<br>username: str<br>password: str | AWS ECR (public) authentication for private ECR registries.<br>Use `username` for AWS access key ID and `password` for AWS secret access key. |
 
 
 ### Example Configuration
-Here is an example configuration that builds all the images within the repository, uploads them to GHCR and enables the CVE scan cron workflow:
+Here is an example configuration that builds all the images within the
+repository, uploads them to GHCR and an additional private registry with basic
+authentication, and enables the CVE scan cron workflow:
 
 ```yaml
 ghcr:
   upload: true
   cve-scan: true
+registries:
+  my-private-registry:
+    uri: my.private.registry.com
+    auth:
+      - method: basic
+        config:
+          username: secrets.MY_PRIVATE_REGISTRY_USERNAME
+          password: secrets.MY_PRIVATE_REGISTRY_PASSWORD
 images:
    - directory: '*'
-```
+     registries:
+      - my-private-registry
