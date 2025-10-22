@@ -119,7 +119,7 @@ jobs:
     if: |
       github.event_name != 'pull_request' && !cancelled() && !failure() &&
       github.ref == 'refs/heads/main' &&
-      needs.read-config.outputs.upload-matrix != '[]'
+      needs.read-config.outputs.upload-matrix != '{"include": []}'
     strategy:
       matrix: ${{ fromJSON(needs.read-config.outputs.upload-matrix) }}
       fail-fast: false
