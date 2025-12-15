@@ -33,6 +33,14 @@ jobs:
         id: read-ci-config
         uses: canonical/rocks-template-actions/actions/read-ci-config@v1
 
+      # If ghcr-upload is true and there are pro rocks in upload matrix, output warning
+      - name: Check Pro in GHCR
+        if: |
+          steps.read-ci-config.outputs.ghcr-upload == 'true' &&
+          contains(steps.read-ci-config.outputs.build-matrix, 'pro-services')
+        run: |
+          echo "::warning::Pro Rocks will not be uploaded to GHCR for public repositories. Please ensure you have alternative registries configured in the upload-matrix."
+
   upload-ghcr:
     needs: [read-config]
     runs-on: ubuntu-latest
@@ -47,7 +55,7 @@ jobs:
       contents: read
     steps:
       - name: Upload Rock to GHCR
-        if: ${{ github.event.repository.visibility != 'public' || matrix.pro-services != '' }}
+        if: ${{ github.event.repository.visibility != 'public' || matrix.pro-services == '' }}
         uses: canonical/oci-factory/.github/actions/upload-rock@main
         with:
           artifact_name: ${{ matrix.artifact-name }}
