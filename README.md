@@ -77,10 +77,6 @@ make sync-with-template
 
 ## Override the behavior of the CI
 
-> [!IMPORTANT]
-> Spread tests are not currently compatible with Pro rocks. Please do not include the spread files for those
-> rocks that are intended to be built with pro services enabled.
-
 The behavior of the CI is configured in `.github/ci.yaml`, which defines the following parameters:
 
 | Property | Required | Type | Description |
