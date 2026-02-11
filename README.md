@@ -96,7 +96,7 @@ The behavior of the CI is configured in `.github/ci.yaml`, which defines the fol
 | registries.\<name\>.auth[0].config | True | Dict[str, str] | The configuration of the corresponding authentication method. See [below](#registry-authentication-configuration) for details. |
 | images | True | List[Any] | The list of images to be built, tested and uploaded. |
 | images.*.directory | True | str | The directory to the `rockcraft.yaml` file. A quoted asterisk symbol `'*'` matches all the directories that contain a `rockcraft.yaml` file within this repo. |
-| images.*.pro-services | True | Optional[List[str]] | The list of pro services to build the rock with. Requires the `UBUNTU_PRO_TOKEN` secret to be created in the repository. |
+| images.*.pro | False | Optional[Dict[Any]] | The configuration for building pro enabled rocks. See [below](#building-pro-enabled-rocks) for details. |
 | images.*.registries | True | Optional[List[str]] | The list of additional registries (defined in `registries`) to which the image should be published. |
 
 
@@ -118,6 +118,18 @@ secrets.MY_BEARER_TOKEN`.
 | bearer | token: str | Bearer token authentication. |
 | ecr<br>ecr-public | region: str<br>username: str<br>password: str | AWS ECR (public) authentication for private ECR registries.<br>Use `username` for AWS access key ID and `password` for AWS secret access key. |
 
+### Building Pro enabled rocks
+
+> [!IMPORTANT]
+> Pro enabled rocks cannot be uploaded to GHCR on public repositories. If you want to upload Pro enabled rocks to GHCR, please make sure your repository is internal or private, and that you have the `REPO_CLONER_TOKEN` secret properly configured as mentioned in the [Setup Instructions](#setup-instructions) section.
+
+To build rocks with pro services enabled, the `pro` configuration should be defined under the corresponding image configuration. The `pro` configuration contains the following parameters:
+
+| Property | Required | Type | Description |
+|---|---|---|---|
+| services | True | List[str] | The list of pro services to be enabled. Requires a pro token configured within the repository secrets. |
+| config.token | False | Optional[str] | The secret name of the pro token stored in the repository secrets. If not set, it defaults to `secrets.UBUNTU_PRO_TOKEN`. |
+| config.artifact-passphrase | False | Optional[str] | The secret name of the custom passphrase stored in the repository secrets. If not set, it defaults to the `secrets.GITHUB_TOKEN`. |
 
 ### Example Configuration
 Here is an example configuration that builds all the images within the
@@ -138,5 +150,11 @@ registries:
           password: secrets.MY_PRIVATE_REGISTRY_PASSWORD
 images:
    - directory: '*'
+     pro:
+      services:
+        - esm-apps
+      config:
+        token: secrets.MY_PRO_TOKEN
+        artifact-passphrase: secrets.MY_CUSTOM_PASSPHRASE
      registries:
       - my-private-registry

@@ -30,10 +30,23 @@ images:
   #     - docker.io
   #     - rocksdev-ecr-public
 
-  ## Example of specifying pro-services to build the rock with
+  ## Example of specifying pro-services with custom config
   # - directory: "my-rock-name/0.1-24.04"
-  #   pro-services:
-  #     - esm-apps
-  #     - esm-infra
+  #   pro:
+  #    services:
+  #      - esm-apps
+  #      - esm-infra
+  #  registries:
+  #   ...
+
+  ## Example of specifying pro-services with custom config to build the rock with
+  # - directory: "my-rock-name/0.1-24.04"
+  #   pro:
+  #    config:
+  #      token: secrets.MY_PRO_TOKEN                    # @@@@@@ DO NOT PUT ACTUAL CREDENTIALS HERE (default: UBUNTU_PRO_TOKEN) @@@@@@
+  #      artifact-passphrase: secrets.MY_PASSPHRASE     # @@@@@@ DO NOT PUT ACTUAL CREDENTIALS HERE (default: GITHUB_TOKEN) @@@@@@
+  #    services:
+  #      - esm-apps
+  #      - esm-infra
   #   registries:
   #     ...
