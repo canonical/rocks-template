@@ -8,66 +8,63 @@ on:
   workflow_dispatch:
 
 jobs:
-
-  read-config:
+  prepare:
     runs-on: ubuntu-latest
     outputs:
       ghcr-upload: ${{ steps.read-ci-config.outputs.ghcr-upload }}
-      ghcr-cve-scan: ${{ steps.read-ci-config.outputs.ghcr-cve-scan }}
       build-matrix: ${{ steps.read-ci-config.outputs.build-matrix }}
       upload-matrix: ${{ steps.read-ci-config.outputs.upload-matrix }}
+      arch-map: ${{ steps.set-map.outputs.arch-map }}
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v5
 
       - name: Read .github/ci.yaml
         id: read-ci-config
         uses: canonical/rocks-template-actions/actions/read-ci-config@v1
 
-  get-runners:
-    runs-on: ubuntu-latest
-    outputs:
-      arch-map: ${{ steps.set-map.outputs.arch-map }}
-    steps:
-      - id: set-map
+      - name: Set Architecture Map
+        id: set-map
         run: |
-          if [[ "${{ github.repository_owner }}" == "canonical" ]]; then
-            echo 'arch-map={"amd64":["noble","X64","large"],"arm64":["noble","ARM64","large"]}' >> $GITHUB_OUTPUT
-          else
+          if [[ "${{ github.repository_owner }}" != "canonical" ]]; then
             echo 'arch-map={"amd64":["ubuntu-24.04"],"arm64":["ubuntu-24.04-arm"]}' >> $GITHUB_OUTPUT
           fi
 
   build:
-    needs: [get-runners, read-config]
+    needs: [prepare]
     strategy:
-      matrix: ${{ fromJSON(needs.read-config.outputs.build-matrix) }}
+      matrix: ${{ fromJSON(needs.prepare.outputs.build-matrix) }}
     uses: canonical/oci-factory/.github/workflows/Build-Rock.yaml@main
     with:
-      rock-repo: ${{ github.repository }}
+      rock-repo: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
       rock-repo-commit: ${{ github.head_ref || github.ref_name }}
       rockfile-directory: ${{ matrix.directory }}
       oci-archive-name: ${{ matrix.artifact-name }}
-      arch-map: ${{ needs.get-runners.outputs.arch-map }}
+      arch-map: ${{ needs.prepare.outputs.arch-map }}
       rockcraft-test: ${{ matrix.run-tests }}
+    secrets:
+      source-github-token: ${{ secrets.REPO_CLONER_TOKEN }}
+
 
   test:
-    needs: [read-config, build]
+    needs: [prepare, build]
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.read-config.outputs.build-matrix) }}
+      matrix: ${{ fromJSON(needs.prepare.outputs.build-matrix) }}
     uses: canonical/oci-factory/.github/workflows/Test-Rock.yaml@main
     with:
       oci-archive-name: ${{ matrix.artifact-name }}
 
+
   upload-ghcr:
-    needs: [read-config, test]
+    needs: [prepare, test]
     runs-on: ubuntu-latest
     if: |
       needs.prepare.outputs.ghcr-upload == 'true' &&
       github.event_name != 'pull_request' && 
       github.ref == 'refs/heads/main'
     strategy:
-      matrix: ${{ fromJSON(needs.read-config.outputs.build-matrix) }}
+      matrix: ${{ fromJSON(needs.prepare.outputs.build-matrix) }}
       fail-fast: false
     permissions:
       packages: write
@@ -82,16 +79,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+
   upload-registries:
-    needs: [read-config, test]
+    needs: [prepare, test]
+    runs-on: ubuntu-latest
     if: |
       needs.prepare.outputs.upload-matrix != '{"include": []}' &&
       github.event_name != 'pull_request' && 
       github.ref == 'refs/heads/main'
     strategy:
-      matrix: ${{ fromJSON(needs.read-config.outputs.upload-matrix) }}
+      matrix: ${{ fromJSON(needs.prepare.outputs.upload-matrix) }}
       fail-fast: false
-    runs-on: ubuntu-latest
     steps:
       - name: Prepare ECR Session Token
         if: ${{ contains(matrix.registry-auth-method, 'ecr') }}
@@ -128,4 +126,3 @@ jobs:
           registry: ${{ matrix.registry-uri }}
           username: ${{ secrets[matrix.registry-auth-username] }}
           password: ${{ secrets[matrix.registry-auth-password] }}
-
