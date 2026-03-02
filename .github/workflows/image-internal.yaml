@@ -6,17 +6,21 @@
 name: Build and Publish Rocks (Internal)
 
 on:
+  # Uncomment these lines to enable the workflow on push and pull_request events
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
   workflow_dispatch:
 
 jobs:
+
   prepare:
     runs-on: ubuntu-latest
     outputs:
       ghcr-upload: ${{ steps.read-ci-config.outputs.ghcr-upload }}
       build-matrix: ${{ steps.read-ci-config.outputs.build-matrix }}
       upload-matrix: ${{ steps.read-ci-config.outputs.upload-matrix }}
-      shared-key: ${{ steps.shared-key.outputs.shared-token }}
-      arch-map: ${{ steps.set-map.outputs.arch-map }}
     steps:
       - name: Pre-Check
         if: |
@@ -34,16 +38,11 @@ jobs:
         uses: canonical/rocks-template-actions/actions/read-ci-config@v1
 
 
-  # Why do we need this duplicate job and reusable Build-Rock workflow?
-  # - the Build-Rock wf may need an an environment setup that relies on an internal action
-  #   - to call an internal action, the repo must also be internal/private
-  #     - but the OCI Factory is not internal/private, so that internal action cannot be called from there
   build-internal:
-    needs: [get-runners, read-config]
-    if: github.event.repository.visibility != 'public'
+    needs: [prepare]
     strategy:
       fail-fast: true
-      matrix: ${{ fromJSON(needs.read-config.outputs.build-matrix) }}
+      matrix: ${{ fromJSON(needs.prepare.outputs.build-matrix) }}
     uses: canonical/oci-factory-internal/.github/workflows/Build-Rock.yaml@main
     with:
       rock-repo: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
@@ -56,10 +55,10 @@ jobs:
 
 
   test:
-    needs: [prepare, build-internal] 
+    needs: [prepare, build-internal]
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.prepare.outputs.build-matrix) }}
+      matrix: ${{ fromJson(needs.prepare.outputs.build-matrix) }}
     uses: canonical/oci-factory/.github/workflows/Test-Rock.yaml@main
     with:
       oci-archive-name: ${{ matrix.artifact-name }}
@@ -77,8 +76,6 @@ jobs:
       fail-fast: false
     permissions:
       packages: write
-      actions: read
-      contents: read
     steps:
       - name: Upload Rock to GHCR
         uses: canonical/oci-factory/.github/actions/upload-rock@main
@@ -137,3 +134,4 @@ jobs:
           registry: ${{ matrix.registry-uri }}
           username: ${{ secrets[matrix.registry-auth-username] }}
           password: ${{ secrets[matrix.registry-auth-password] }}
+
