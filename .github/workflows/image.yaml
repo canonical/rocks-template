@@ -14,7 +14,6 @@ jobs:
       ghcr-upload: ${{ steps.read-ci-config.outputs.ghcr-upload }}
       build-matrix: ${{ steps.read-ci-config.outputs.build-matrix }}
       upload-matrix: ${{ steps.read-ci-config.outputs.upload-matrix }}
-      shared-key: ${{ steps.shared-key.outputs.shared-token }}
       arch-map: ${{ steps.set-map.outputs.arch-map }}
     steps:
       - name: Checkout Repository
@@ -30,14 +29,6 @@ jobs:
           if [[ "${{ github.repository_owner }}" != "canonical" ]]; then
             echo 'arch-map={"amd64":["ubuntu-24.04"],"arm64":["ubuntu-24.04-arm"]}' >> $GITHUB_OUTPUT
           fi
-
-      # Create a persistent key for decryption to replace the ephimeral GITHUB_TOKEN
-      # Such key consists of sha256sum of GITHUB_TOKEN. Only used in pro builds.
-      - name: Create Shared Key
-        id: shared-key
-        run: |
-          shared_token=$(sha256sum <<< "${{ secrets.GITHUB_TOKEN }}" | cut -d ' ' -f 1)
-          echo "shared-token=$shared_token" >> $GITHUB_OUTPUT
 
       # TODO: remove once the pro-feature is stable in rockcraft
       # Warn the user if using tests in a pro enabled build
@@ -73,7 +64,7 @@ jobs:
     secrets:
       source-github-token: ${{ secrets.REPO_CLONER_TOKEN }}
       pro-token: ${{ secrets[matrix.pro-token] }}
-      pro-artifact-passphrase: ${{ matrix.pro-artifact-passphrase == 'GITHUB_TOKEN' && needs.prepare.outputs.shared-key || secrets[matrix.pro-artifact-passphrase] }}
+      pro-artifact-passphrase: ${{ secrets[matrix.pro-artifact-passphrase] }}
 
 
   test:
@@ -85,7 +76,7 @@ jobs:
     with:
       oci-archive-name: ${{ matrix.artifact-name }}
     secrets:
-      pro-artifact-passphrase: ${{ matrix.pro-artifact-passphrase == 'GITHUB_TOKEN' && needs.prepare.outputs.shared-key || secrets[matrix.pro-artifact-passphrase] }}
+      pro-artifact-passphrase: ${{ secrets[matrix.pro-artifact-passphrase] }}
 
 
   upload-ghcr:
@@ -106,10 +97,6 @@ jobs:
         run: |
           echo "::warning::Uploading Pro enabled rocks to GHCR is not allowed for public repositories."
       
-      - name: Redact the Passphrase in Logs
-        if: ${{ matrix.pro-artifact-passphrase == 'GITHUB_TOKEN' }}
-        run: echo "::add-mask::${{ needs.prepare.outputs.shared-key }}"
-
       - name: Upload Rock to GHCR
         if: ${{ github.event.repository.visibility != 'public' || matrix.pro-services == '' }}
         uses: canonical/oci-factory/.github/actions/upload-rock@main
@@ -120,7 +107,7 @@ jobs:
           registry: ghcr.io/${{ github.repository }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          decrypt-passphrase: ${{ matrix.pro-artifact-passphrase == 'GITHUB_TOKEN' && needs.prepare.outputs.shared-key || secrets[matrix.pro-artifact-passphrase] }}
+          decrypt-passphrase: ${{ secrets[matrix.pro-artifact-passphrase] }}
 
 
   upload-registries:
@@ -134,10 +121,6 @@ jobs:
       matrix: ${{ fromJSON(needs.prepare.outputs.upload-matrix) }}
       fail-fast: false
     steps:
-      - name: Redact the Passphrase in Logs
-        if: ${{ matrix.pro-artifact-passphrase == 'GITHUB_TOKEN' }}
-        run: echo "::add-mask::${{ needs.prepare.outputs.shared-key }}"
-
       - name: Prepare ECR Session Token
         if: ${{ contains(matrix.registry-auth-method, 'ecr') }}
         id: get-ecr-token
@@ -162,7 +145,7 @@ jobs:
           registry: ${{ matrix.registry-uri }}
           username: AWS
           password: ${{ steps.get-ecr-token.outputs.aws-session-token }}
-          decrypt-passphrase: ${{ matrix.pro-artifact-passphrase == 'GITHUB_TOKEN' && needs.prepare.outputs.shared-key || secrets[matrix.pro-artifact-passphrase] }}
+          decrypt-passphrase: ${{ secrets[matrix.pro-artifact-passphrase] }}
 
       - name: Upload Rock to Registry
         uses: canonical/oci-factory/.github/actions/upload-rock@main
@@ -174,4 +157,4 @@ jobs:
           registry: ${{ matrix.registry-uri }}
           username: ${{ secrets[matrix.registry-auth-username] }}
           password: ${{ secrets[matrix.registry-auth-password] }}
-          decrypt-passphrase: ${{ matrix.pro-artifact-passphrase == 'GITHUB_TOKEN' && needs.prepare.outputs.shared-key || secrets[matrix.pro-artifact-passphrase] }}
+          decrypt-passphrase: ${{ secrets[matrix.pro-artifact-passphrase] }}

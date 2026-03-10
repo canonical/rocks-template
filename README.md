@@ -124,8 +124,8 @@ To build rocks with pro services enabled, the `pro` configuration should be defi
 | Property | Required | Type | Description |
 |---|---|---|---|
 | services | True | List[str] | The list of pro services to be enabled. Requires a pro token configured within the repository secrets. |
-| config.token | False | Optional[str] | The secret name of the pro token stored in the repository secrets. If not set, it defaults to `secrets.UBUNTU_PRO_TOKEN`. |
-| config.artifact-passphrase | False | Optional[str] | The secret name of the custom passphrase stored in the repository secrets. If not set, it defaults to the `secrets.GITHUB_TOKEN`. |
+| config.token | True | str | The secret name of the pro token stored in the repository secrets. It must be provided in the format `secrets.<SECRET_NAME>`. |
+| config.artifact-passphrase | True | str | The secret name of passphrase used to encrypt the generated pro artifacts. It must be provided in the format `secrets.<SECRET_NAME>`. |
 
 ### Example Configuration
 Here is an example configuration that builds all the images within the
