@@ -43,7 +43,7 @@ jobs:
             run_tests=$(echo "$row" | jq -r '.["run-tests"] // "false"')
 
             if [[ -n "$pro_services" && "$run_tests" == "true" ]]; then
-              echo "::warning::Tests for Pro Services are currently not supported. Skipping tests for ${directory}."
+              echo "::warning::Tests for Pro Services are currently not supported. Rockcraft tests will be skipped for ${directory}."
             fi
           done
 
