@@ -37,7 +37,7 @@ images:
   #       - esm-apps
   #       - esm-infra
   #     config:
-  #       token: secrets.MY_PRO_TOKEN                    # @@@@@@ DO NOT PUT ACTUAL CREDENTIALS HERE (default: UBUNTU_PRO_TOKEN) @@@@@@
-  #       artifact-passphrase: secrets.MY_PASSPHRASE     # @@@@@@ DO NOT PUT ACTUAL CREDENTIALS HERE (default: GITHUB_TOKEN) @@@@@@
+  #       token: secrets.MY_PRO_TOKEN                    # @@@@@@ DO NOT PUT ACTUAL CREDENTIALS HERE @@@@@@
+  #       artifact-passphrase: secrets.MY_PASSPHRASE     # @@@@@@ DO NOT PUT ACTUAL CREDENTIALS HERE @@@@@@
   #   registries:
   #   ...
