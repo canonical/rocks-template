@@ -30,23 +30,6 @@ jobs:
             echo 'arch-map={"amd64":["ubuntu-24.04"],"arm64":["ubuntu-24.04-arm"]}' >> $GITHUB_OUTPUT
           fi
 
-      # TODO: remove once the pro-feature is stable in rockcraft
-      # Warn the user if using tests in a pro enabled build
-      - name: Check Pro and Test Incompatibility
-        run: |
-          build_matrix='${{ steps.read-ci-config.outputs.build-matrix }}'
-
-          # Use jq to iterate over the 'include' array
-          echo "$build_matrix" | jq -c '.include[]' | while read -r row; do
-            directory=$(echo "$row" | jq -r '.["directory"] // "unknown"')
-            pro_services=$(echo "$row" | jq -r '.["pro-services"] // ""')
-            run_tests=$(echo "$row" | jq -r '.["run-tests"] // "false"')
-
-            if [[ -n "$pro_services" && "$run_tests" == "true" ]]; then
-              echo "::warning::Tests for Pro Services are currently not supported. Rockcraft tests will be skipped for ${directory}."
-            fi
-          done
-
 
   build:
     needs: [prepare]
