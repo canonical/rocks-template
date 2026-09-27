@@ -1,0 +1,14 @@
+name: Scan CVEs dispatch
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * *"
+
+jobs:
+  security:
+    uses: canonical/rocks-template-actions/.github/workflows/Security.yaml@ROCKS-2585/public-release
+    secrets: inherit
+    permissions:
+      contents: read
+      packages: read

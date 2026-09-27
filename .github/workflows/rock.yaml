@@ -1,0 +1,15 @@
+name: Build and Publish Rock
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  rock:
+    uses: canonical/rocks-template-actions/.github/workflows/Rock.yaml@ROCKS-2585/public-release
+    secrets: inherit
+    permissions:
+      packages: write
