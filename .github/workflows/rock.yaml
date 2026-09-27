@@ -9,7 +9,7 @@ on:
 
 jobs:
   rock:
-    uses: canonical/rocks-template-actions/.github/workflows/Rock.yaml@ROCKS-2585/public-release
+    uses: canonical/rocks-template-actions/.github/workflows/Rock.yaml@038a8c2204c7e020f053b1bae2f13729e0be5eab # v1.4.0
     secrets: inherit
     permissions:
       packages: write
