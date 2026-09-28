@@ -1,0 +1,87 @@
+name: Renovate
+
+# Self-contained dependency-update runner for repositories created from this
+# template. It keeps the SHA-pinned `canonical/rocks-actions` reusable
+# workflows (and other actions) up to date by opening PRs that bump both the
+# commit SHA and the `# vX.Y.Z` comment, driven by renovate.json.
+#
+# Coexistence: if the org has the Mend-hosted Renovate GitHub App installed on
+# this repo, that app already does the same job. The `check-app` gate below
+# detects the app and skips this workflow to avoid duplicate PRs, so you can
+# safely keep this file whether or not the app is installed. If you rely on the
+# app exclusively, you may simply delete this workflow.
+
+on:
+  schedule:
+    # Daily; adjust to taste. Security-relevant SHA bumps land quickly.
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: "Renovate log level"
+        required: false
+        default: "info"
+        type: choice
+        options: ["debug", "info", "warn"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renovate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Detect whether the Mend Renovate GitHub App is installed on this repo.
+  # If it is, we skip the self-hosted run to prevent duplicate PRs.
+  check-app:
+    runs-on: ubuntu-latest
+    outputs:
+      app-installed: ${{ steps.detect.outputs.installed }}
+    steps:
+      - id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The app opens/maintains a "Dependency Dashboard" issue and commits
+          # via the "renovate[bot]" / "mend[bot]" login. Presence of a PR or
+          # issue authored by those bots is a reliable signal the app is active.
+          bots="renovate[bot] mend[bot] renovate-bot"
+          installed=false
+          for bot in $bots; do
+            count=$(gh api \
+              "repos/${GITHUB_REPOSITORY}/issues?state=all&creator=${bot}&per_page=1" \
+              --jq 'length' 2>/dev/null || echo 0)
+            if [ "${count:-0}" -gt 0 ]; then
+              installed=true
+              break
+            fi
+          done
+          echo "installed=${installed}" >> "$GITHUB_OUTPUT"
+          echo "Mend Renovate App detected: ${installed}"
+
+  renovate:
+    needs: check-app
+    if: needs.check-app.outputs.app-installed != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Run Renovate
+        uses: renovatebot/github-action@f3a31a786096ba6b40d0f0ffe11a494ef73bfa7c # v46.3.4
+        env:
+          # Built-in token: zero setup for repos created from this template.
+          # Note: PRs opened with GITHUB_TOKEN do not trigger other workflows,
+          # so CI won't auto-run on Renovate PRs. A maintainer reviews/merges
+          # the SHA bumps anyway. To have CI re-run, provide a PAT/App token
+          # secret and reference it here instead.
+          RENOVATE_TOKEN: ${{ github.token }}
+          # Only manage this repository.
+          RENOVATE_AUTODISCOVER: "false"
+          RENOVATE_REPOSITORIES: '["${{ github.repository }}"]'
+          RENOVATE_PLATFORM: github
+          LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
