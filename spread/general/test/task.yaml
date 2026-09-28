@@ -1,0 +1,4 @@
+summary: test the 'my-rock-name' project
+
+execute: |
+  echo "Put your test code here"
