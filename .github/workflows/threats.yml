@@ -1,4 +1,4 @@
-name: Scan CVEs dispatch
+name: Threat monitor
 
 on:
   workflow_dispatch:

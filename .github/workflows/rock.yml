@@ -1,4 +1,4 @@
-name: Build and Publish Rock
+name: Rock pipeline
 
 on:
   push:
