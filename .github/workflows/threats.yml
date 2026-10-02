@@ -7,7 +7,7 @@ on:
 
 jobs:
   security:
-    uses: canonical/rocks-actions/.github/workflows/Security.yaml@038a8c2204c7e020f053b1bae2f13729e0be5eab # v1.4.0
+    uses: canonical/rocks-actions/.github/workflows/Security.yaml@37b3cb639e19b045baf571b8273f6a2f54a645c1 # v1.4.1
     secrets: inherit
     permissions:
       contents: read
