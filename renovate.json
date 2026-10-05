@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":dependencyDashboard"
+  ],
+  "labels": ["dependencies", "renovate"],
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "description": "Group and auto-flag rocks-actions reusable-workflow SHA bumps. These are pinned to a full commit SHA with a `# vX.Y.Z` comment; Renovate keeps both in sync when a new release is published.",
+      "matchManagers": ["github-actions"],
+      "matchDepNames": ["canonical/rocks-actions"],
+      "groupName": "rocks-actions",
+      "commitMessageTopic": "canonical/rocks-actions",
+      "schedule": ["at any time"],
+      "minimumReleaseAge": "0 days"
+    }
+  ],
+  "github-actions": {
+    "fileMatch": ["^\\.github/workflows/[^/]+\\.ya?ml$"]
+  }
+}
